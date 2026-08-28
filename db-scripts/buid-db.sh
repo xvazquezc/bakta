@@ -2,6 +2,10 @@
 
 set -e
 
+# Build one database containing both organism profiles. The runtime
+# --organism option selects its profile-specific assets and predictors.
+BAKTA_TAXON_ARGS="--taxon 2 --taxon 2157"
+
 mkdir db
 cd db
 
@@ -11,41 +15,72 @@ printf "Create Bakta database\n"
 printf "\n1/19: download rRNA covariance models from Rfam ...\n"
 wget https://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz
 pigz -d Rfam.cm.gz
-cmfetch Rfam.cm RF00001 >  rRNA
-cmfetch Rfam.cm RF00177 >> rRNA
-cmfetch Rfam.cm RF02541 >> rRNA
-cmpress rRNA
-rm rRNA
+for profile in bacteria archaea; do
+    if [ "${profile}" = "bacteria" ]; then
+        rRNA_name=rRNA
+        rRNA_ssu=RF00177
+        rRNA_lsu=RF02541
+    else
+        rRNA_name=rRNA-archaea
+        rRNA_ssu=RF01959
+        rRNA_lsu=RF02540
+    fi
+    cmfetch Rfam.cm RF00001 > "${rRNA_name}"
+    cmfetch Rfam.cm "${rRNA_ssu}" >> "${rRNA_name}"
+    cmfetch Rfam.cm "${rRNA_lsu}" >> "${rRNA_name}"
+    cmpress "${rRNA_name}"
+    rm "${rRNA_name}"
+done
 
 
 # download and extract ncRNA gene covariance models from Rfam
 printf "\n2/19: download ncRNA gene covariance models from Rfam ...\n"
-mysql --user rfamro --host mysql-rfam-public.ebi.ac.uk --port 4497 --database Rfam < ${BAKTA_DB_SCRIPTS}/ncRNA-genes.sql | tail -n +2 > rfam-genes.raw.txt
-grep "antitoxin;" rfam-genes.raw.txt >> rfam-genes.txt
-grep "antisense;" rfam-genes.raw.txt >> rfam-genes.txt
-grep "ribozyme;" rfam-genes.raw.txt >> rfam-genes.txt
-grep "sRNA;" rfam-genes.raw.txt >> rfam-genes.txt
-cut -f1 ${BAKTA_DB_SCRIPTS}/ncRNA-genes.blocklist.txt > ncRNA-genes.blocklist
-grep -e "Gene;[^ ]" rfam-genes.raw.txt | grep -v -f ncRNA-genes.blocklist >> rfam-genes.txt
-cmfetch -o ncRNA-genes -f Rfam.cm rfam-genes.txt
-cmpress ncRNA-genes
+for profile in bacteria archaea; do
+    if [ "${profile}" = "bacteria" ]; then
+        RFAM_TAXON=Bacteria
+        NCRNA_GENES_NAME=ncRNA-genes
+    else
+        RFAM_TAXON=Archaea
+        NCRNA_GENES_NAME=ncRNA-genes-archaea
+    fi
+    sed "s/LIKE 'Bacteria%'/LIKE '${RFAM_TAXON}%'/" ${BAKTA_DB_SCRIPTS}/ncRNA-genes.sql | mysql --user rfamro --host mysql-rfam-public.ebi.ac.uk --port 4497 --database Rfam | tail -n +2 > rfam-genes.raw.txt
+    grep "antitoxin;" rfam-genes.raw.txt >> rfam-genes.txt
+    grep "antisense;" rfam-genes.raw.txt >> rfam-genes.txt
+    grep "ribozyme;" rfam-genes.raw.txt >> rfam-genes.txt
+    grep "sRNA;" rfam-genes.raw.txt >> rfam-genes.txt
+    cut -f1 ${BAKTA_DB_SCRIPTS}/ncRNA-genes.blocklist.txt > ncRNA-genes.blocklist
+    grep -e "Gene;[^ ]" rfam-genes.raw.txt | grep -v -f ncRNA-genes.blocklist >> rfam-genes.txt
+    cmfetch -o "${NCRNA_GENES_NAME}" -f Rfam.cm rfam-genes.txt
+    cmpress "${NCRNA_GENES_NAME}"
+    rm rfam-genes.raw.txt rfam-genes.txt ncRNA-genes.blocklist "${NCRNA_GENES_NAME}"
+done
 wget http://current.geneontology.org/ontology/external2go/rfam2go
 awk -F ' ' '{print $1 "\t" $NF}' rfam2go > rfam-go.tsv
-rm rfam-genes.raw.txt rfam-genes.txt ncRNA-genes.blocklist ncRNA-genes rfam2go
+rm rfam2go
 
 
 # download and extract ncRNA regions (cis reg elements) covariance models from Rfam
 printf "\n3/19: download ncRNA region covariance models from Rfam ...\n"
-mysql --user rfamro --host mysql-rfam-public.ebi.ac.uk --port 4497 --database Rfam < ${BAKTA_DB_SCRIPTS}/ncRNA-regions.sql | tail -n +2 > rfam-regions.raw.txt
-grep "riboswitch;" rfam-regions.raw.txt >> rfam-regions.txt
-grep "thermoregulator;" rfam-regions.raw.txt >> rfam-regions.txt
-grep "leader;" rfam-regions.raw.txt >> rfam-regions.txt
-grep "frameshift_element;" rfam-regions.raw.txt >> rfam-regions.txt
-cut -f1 ${BAKTA_DB_SCRIPTS}/ncRNA-regions.blocklist.txt > ncRNA-regions.blocklist
-grep -e "Cis-reg;[^ ]" rfam-regions.raw.txt | grep -v -f ncRNA-regions.blocklist >> rfam-regions.txt
-cmfetch -o ncRNA-regions -f Rfam.cm rfam-regions.txt
-cmpress ncRNA-regions
-rm rfam-regions.raw.txt rfam-regions.txt ncRNA-regions.blocklist ncRNA-regions Rfam.cm
+for profile in bacteria archaea; do
+    if [ "${profile}" = "bacteria" ]; then
+        RFAM_TAXON=Bacteria
+        NCRNA_REGIONS_NAME=ncRNA-regions
+    else
+        RFAM_TAXON=Archaea
+        NCRNA_REGIONS_NAME=ncRNA-regions-archaea
+    fi
+    sed "s/LIKE 'Bacteria%'/LIKE '${RFAM_TAXON}%'/" ${BAKTA_DB_SCRIPTS}/ncRNA-regions.sql | mysql --user rfamro --host mysql-rfam-public.ebi.ac.uk --port 4497 --database Rfam | tail -n +2 > rfam-regions.raw.txt
+    grep "riboswitch;" rfam-regions.raw.txt >> rfam-regions.txt
+    grep "thermoregulator;" rfam-regions.raw.txt >> rfam-regions.txt
+    grep "leader;" rfam-regions.raw.txt >> rfam-regions.txt
+    grep "frameshift_element;" rfam-regions.raw.txt >> rfam-regions.txt
+    cut -f1 ${BAKTA_DB_SCRIPTS}/ncRNA-regions.blocklist.txt > ncRNA-regions.blocklist
+    grep -e "Cis-reg;[^ ]" rfam-regions.raw.txt | grep -v -f ncRNA-regions.blocklist >> rfam-regions.txt
+    cmfetch -o "${NCRNA_REGIONS_NAME}" -f Rfam.cm rfam-regions.txt
+    cmpress "${NCRNA_REGIONS_NAME}"
+    rm rfam-regions.raw.txt rfam-regions.txt ncRNA-regions.blocklist "${NCRNA_REGIONS_NAME}"
+done
+rm Rfam.cm
 
 
 # download and extract spurious ORF HMMs from AntiFam
@@ -57,10 +92,15 @@ tar -xzf Antifam.tar.gz
 cd ..
 mv antifam-dir/AntiFam_Bacteria.hmm antifam
 hmmpress antifam
-rm -r antifam antifam-dir/
+rm antifam
+mv antifam-dir/AntiFam_Archaea.hmm antifam-archaea
+hmmpress antifam-archaea
+rm antifam-archaea
+rm -r antifam-dir/
 
 
-# download & extract oriT sequences
+# DoriC and MOB-suite records are retained for the bacterial profile only;
+# archaeal annotation uses Ori-Finder-Arch at runtime.
 printf "\n5/19: download and extract oriT sequences from Mob-suite ...\n"
 wget https://zenodo.org/records/10304948/files/data.tar.gz
 tar -xvzf data.tar.gz
@@ -115,7 +155,7 @@ for i in {1..200}; do
     rm uniparc_active_p${i}.fasta.gz
 done
 printf "\n8/19: read UniRef90 entries and build Protein Sequence Cluster sequence and information databases:\n"
-python3 ${BAKTA_DB_SCRIPTS}/init-pscc.py --taxonomy nodes.dmp --uniref50 uniref50.xml.gz --uniparc uniparc_active.fasta --db bakta.db --pscc pscc.faa --pscc_sorf pscc_sorf.faa
+python3 ${BAKTA_DB_SCRIPTS}/init-pscc.py --taxonomy nodes.dmp --uniref50 uniref50.xml.gz --uniparc uniparc_active.fasta --db bakta.db --pscc pscc.faa --pscc_sorf pscc_sorf.faa ${BAKTA_TAXON_ARGS}
 printf "\n8/19: build PSCC Diamond db ...\n"
 diamond makedb --in pscc.faa --db pscc
 diamond makedb --in pscc_sorf.faa --db sorf
@@ -137,7 +177,7 @@ rm uniref50.xml.gz
 printf "\n9/19: download UniProt UniRef90 ...\n"
 wget https://ftp.expasy.org/databases/uniprot/current_release/uniref/uniref90/uniref90.xml.gz
 printf "\n9/19: read UniRef90 entries and build Protein Sequence Cluster sequence and information databases:\n"
-python3 ${BAKTA_DB_SCRIPTS}/init-psc.py --taxonomy nodes.dmp --uniref90 uniref90.xml.gz --uniparc uniparc_active.fasta --db bakta.db --psc psc.faa --psc_sorf sorf.faa
+python3 ${BAKTA_DB_SCRIPTS}/init-psc.py --taxonomy nodes.dmp --uniref90 uniref90.xml.gz --uniparc uniparc_active.fasta --db bakta.db --psc psc.faa --psc_sorf sorf.faa ${BAKTA_TAXON_ARGS}
 printf "\n9/19: build PSC Diamond db ...\n"
 diamond makedb --in psc.faa --db psc
 diamond makedb --in sorf.faa --db sorf
@@ -152,27 +192,30 @@ rm uniref90.xml.gz
 printf "\n10/19: download UniProt UniRef100 ...\n"
 wget https://ftp.expasy.org/databases/uniprot/current_release/uniref/uniref100/uniref100.xml.gz
 printf "\n10/19: read, filter and store UniRef100 entries ...:\n"
-python3 ${BAKTA_DB_SCRIPTS}/init-ups-ips.py --taxonomy nodes.dmp --uniref100 uniref100.xml.gz --uniparc uniparc_active.fasta --db bakta.db --ips ips.faa
+python3 ${BAKTA_DB_SCRIPTS}/init-ups-ips.py --taxonomy nodes.dmp --uniref100 uniref100.xml.gz --uniparc uniparc_active.fasta --db bakta.db --ips ips.faa ${BAKTA_TAXON_ARGS}
 rm uniref100.xml.gz uniparc_active.fasta.gz
 
 
 ############################################################################
 # Integrate NCBI nonredundant protein identifiers and COG db
-# - download bacterial RefSeq nonredundant proteins and COG files
+# - download bacterial and archaeal RefSeq nonredundant proteins and COG files
 # - annotate UPSs with NCBI nrp IDs (WP_*)
 # - annotate IPSs/PSCs with COG IDs, gene symbols, product descriptions (seq -> hash -> UniParc/WP_* -> UniRef100 -> UniRef90 -> PSC)
 ############################################################################
 printf "\n11/19: download NCBI COG clusters and RefSeq nonredundant proteins ...\n"
 wget https://ftp.ncbi.nih.gov/pub/COG/COG2024/data/cog-24.def.tab  # COG IDs and functional class
 wget https://ftp.ncbi.nih.gov/pub/COG/COG2024/data/cog-24.cog.csv  # Mapping GenBank IDs -> COG IDs
-for i in {1..652}; do
-    wget https://ftp.ncbi.nih.gov/refseq/release/bacteria/bacteria.wp_protein.${i}.protein.faa.gz
-    pigz -dc bacteria.wp_protein.${i}.protein.faa.gz | seqtk seq -CU >> refseq-bacteria-nrp.trimmed.faa
-    rm bacteria.wp_protein.${i}.protein.faa.gz
+for refseq_domain in bacteria archaea; do
+    refseq_url=https://ftp.ncbi.nih.gov/refseq/release/${refseq_domain}
+    wget -qO- "${refseq_url}/" | sed -n "s/.*href=\"\(${refseq_domain}\.wp_protein\.[0-9]*\.protein\.faa\.gz\)\".*/\1/p" | while read -r refseq_file; do
+        wget "${refseq_url}/${refseq_file}"
+        pigz -dc "${refseq_file}" | seqtk seq -CU >> refseq-nrp.trimmed.faa
+        rm "${refseq_file}"
+    done
 done
 printf "\n11/19: annotate IPSs and PSCs ...\n"
-python3 ${BAKTA_DB_SCRIPTS}/annotate-ncbi-nrp-cog.py --db bakta.db --nrp refseq-bacteria-nrp.trimmed.faa --cog-ids cog-24.def.tab --nrp-cog-mapping cog-24.cog.csv
-rm refseq-bacteria-nrp.trimmed.faa 
+python3 ${BAKTA_DB_SCRIPTS}/annotate-ncbi-nrp-cog.py --db bakta.db --nrp refseq-nrp.trimmed.faa --cog-ids cog-24.def.tab --nrp-cog-mapping cog-24.cog.csv
+rm refseq-nrp.trimmed.faa
 
 
 ############################################################################
@@ -206,7 +249,7 @@ rm -rf profiles ko_list.gz kofam* hmmsearch.kofam.* hmms*
 printf "\n13/19: download UniProt/SwissProt ...\n"
 wget https://ftp.expasy.org/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.xml.gz
 printf "\n13/19: annotate IPSs and PSCs ...\n"
-python3 ${BAKTA_DB_SCRIPTS}/annotate-swissprot.py --taxonomy nodes.dmp --xml uniprot_sprot.xml.gz --db bakta.db
+python3 ${BAKTA_DB_SCRIPTS}/annotate-swissprot.py --taxonomy nodes.dmp --xml uniprot_sprot.xml.gz --db bakta.db ${BAKTA_TAXON_ARGS}
 rm uniprot_sprot.xml.gz
 
 
@@ -319,6 +362,12 @@ python3 ${BAKTA_DB_SCRIPTS}/expert/setup-ncbiblastrules.py --expert-sequence exp
 python3 ${BAKTA_DB_SCRIPTS}/expert/setup-vfdb.py --expert-sequence expert-protein-sequences.faa --proteins VFDB_setA_pro.fas
 diamond makedb --in expert-protein-sequences.faa --db expert-protein-sequences
 rm -r 4.2.2/ 4.2.2.tgz IS.faa VFDB_setA_pro.fas expert-protein-sequences.faa
+: "${BAKTA_ARCHAEAL_EXPERT_PROTEINS:?Set BAKTA_ARCHAEAL_EXPERT_PROTEINS to a curated archaeal protein FASTA.}"
+diamond makedb --in "${BAKTA_ARCHAEAL_EXPERT_PROTEINS}" --db expert-protein-sequences-archaea
+
+# The light database keeps its PSCC SQLite snapshot but requires the same
+# profile-specific HMMs and expert databases as the full database.
+cp antifam* ncRNA-genes* ncRNA-regions* rRNA* oric.fna orit.fna pfam* rfam-go.tsv expert-protein-sequences*.dmnd db-light/
 
 # Cleanup
 ls -l bakta.db

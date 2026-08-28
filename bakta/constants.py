@@ -193,6 +193,27 @@ GRAM_POSITIVE = '+'
 GRAM_NEGATIVE = '-'
 GRAM_UNKNOWN = '?'
 
+# Organism profiles
+ORGANISM_BACTERIA = 'bacteria'
+ORGANISM_ARCHAEA = 'archaea'
+
+# Domain-specific gene-calling and recoding policy. These are intentionally
+# explicit so that changes to one profile cannot alter the other.
+ORGANISM_PROFILES = {
+    ORGANISM_BACTERIA: {
+        'sorf_start_codons': ('ATG',),
+        'tmrna_gene': 'ssrA',
+        'tmrna_product': 'transfer-messenger RNA, SsrA',
+        'recoding_codons': {'TGA': 'selenocysteine'}
+    },
+    ORGANISM_ARCHAEA: {
+        'sorf_start_codons': ('ATG', 'GTG', 'TTG'),
+        'tmrna_gene': None,
+        'tmrna_product': 'transfer-messenger RNA',
+        'recoding_codons': {'TGA': 'selenocysteine', 'TAG': 'pyrrolysine'}
+    }
+}
+
 
 ############################################################################
 # Replicon types, length thresholds & topology
