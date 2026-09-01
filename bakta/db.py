@@ -74,7 +74,7 @@ FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | s
 DIR_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
 
 
-def check(db_path: Path, organism: str = bc.ORGANISM_BACTERIA) -> dict:
+def check(db_path: Path, domain: str = bc.DOMAIN_BACTERIA) -> dict:
     """Check if database directory exists, is accessible and contains necessary files."""
 
     if(db_path is None):
@@ -118,7 +118,7 @@ def check(db_path: Path, organism: str = bc.ORGANISM_BACTERIA) -> dict:
         'rRNA.i1f', 'rRNA.i1i', 'rRNA.i1m', 'rRNA.i1p'
     }
     required_db_files = [file_name for file_name in FILE_NAMES if file_name not in profile_files and file_name != 'expert-protein-sequences.dmnd']
-    if organism == bc.ORGANISM_ARCHAEA:
+    if domain == bc.DOMAIN_ARCHAEA:
         required_db_files = [file_name for file_name in required_db_files if file_name not in {'oric.fna', 'orit.fna'}]
         required_db_files.extend(ARCHAEAL_FILE_NAMES)
     else:

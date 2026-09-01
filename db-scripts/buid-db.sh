@@ -2,8 +2,8 @@
 
 set -e
 
-# Build one database containing both organism profiles. The runtime
-# --organism option selects its profile-specific assets and predictors.
+# Build one database containing both domain profiles. The runtime
+# --domain option selects its profile-specific assets and predictors.
 BAKTA_TAXON_ARGS="--taxon 2 --taxon 2157"
 
 mkdir db

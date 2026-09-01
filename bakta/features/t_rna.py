@@ -49,7 +49,7 @@ def predict_t_rnas(data: dict, sequences_path: Path):
     fasta_output_path = cfg.tmp_path.joinpath('trna.fasta')
     cmd = [
         'tRNAscan-SE',
-        '-A' if cfg.organism == bc.ORGANISM_ARCHAEA else '-B',
+        '-A' if cfg.domain == bc.DOMAIN_ARCHAEA else '-B',
         '--output', str(txt_output_path),
         '--fasta', str(fasta_output_path),
         '--thread', str(cfg.threads),

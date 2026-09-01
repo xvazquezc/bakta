@@ -489,7 +489,7 @@ def revise_translational_exceptions(data: dict, cdss: Sequence[dict]):
             if(
                 cds_a['strand'] == cds_b['strand'] and  # up- and downstream ORFs on the same strand
                 cds_a['frame'] == cds_b['frame'] and  # up- and downstream ORFs on the same frame
-                upstream_stop_codon in bc.ORGANISM_PROFILES[cfg.organism or bc.ORGANISM_BACTERIA]['recoding_codons'] and
+                upstream_stop_codon in bc.DOMAIN_PROFILES[cfg.domain or bc.DOMAIN_BACTERIA]['recoding_codons'] and
                 (cds_b['start'] - cds_a['stop']) < 100):  # up- and downstream ORFs in close proximity
                 cds_pairs = cds_pairs_per_sequence[cds_a['sequence']]
                 cds_pairs.append((cds_a, cds_b, upstream_stop_codon))
@@ -497,7 +497,7 @@ def revise_translational_exceptions(data: dict, cdss: Sequence[dict]):
     recoding_regions = [ncrna_region for ncrna_region in data['features'] if ncrna_region['type'] == bc.FEATURE_NC_RNA_REGION  and  ncrna_region['class'] == so.SO_CIS_REG_RECODING_STIMULATION_REGION]  #  Selenocysteine insertion sequences
     for recoding_region in recoding_regions:
         product = recoding_region.get('product', '').lower()
-        recoding_profile = bc.ORGANISM_PROFILES[cfg.organism or bc.ORGANISM_BACTERIA]
+        recoding_profile = bc.DOMAIN_PROFILES[cfg.domain or bc.DOMAIN_BACTERIA]
         recoding_type = next((value for codon, value in recoding_profile['recoding_codons'].items() if value in product), None)
         if(recoding_type is not None):
             cds_pairs = cds_pairs_per_sequence[recoding_region['sequence']]

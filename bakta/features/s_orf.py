@@ -25,7 +25,7 @@ def extract(data: dict):
     orfs = []
     for seq in data['sequences']:
         nt_seq = Seq(seq['nt'])
-        start_codons = bc.ORGANISM_PROFILES[cfg.organism or bc.ORGANISM_BACTERIA]['sorf_start_codons']
+        start_codons = bc.DOMAIN_PROFILES[cfg.domain or bc.DOMAIN_BACTERIA]['sorf_start_codons']
         for strand, strand_nt_seq in [(bc.STRAND_FORWARD, nt_seq), (bc.STRAND_REVERSE, nt_seq.reverse_complement())]:  # strands +/-
             for frame in range(3):  # frames 1/2/3 -> 0, 1, 2
                 seq_frame = strand_nt_seq[frame:]

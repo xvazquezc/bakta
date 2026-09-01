@@ -194,19 +194,19 @@ GRAM_NEGATIVE = '-'
 GRAM_UNKNOWN = '?'
 
 # Organism profiles
-ORGANISM_BACTERIA = 'bacteria'
-ORGANISM_ARCHAEA = 'archaea'
+DOMAIN_BACTERIA = 'bacteria'
+DOMAIN_ARCHAEA = 'archaea'
 
 # Domain-specific gene-calling and recoding policy. These are intentionally
 # explicit so that changes to one profile cannot alter the other.
-ORGANISM_PROFILES = {
-    ORGANISM_BACTERIA: {
+DOMAIN_PROFILES = {
+    DOMAIN_BACTERIA: {
         'sorf_start_codons': ('ATG',),
         'tmrna_gene': 'ssrA',
         'tmrna_product': 'transfer-messenger RNA, SsrA',
         'recoding_codons': {'TGA': 'selenocysteine'}
     },
-    ORGANISM_ARCHAEA: {
+    DOMAIN_ARCHAEA: {
         'sorf_start_codons': ('ATG', 'GTG', 'TTG'),
         'tmrna_gene': None,
         'tmrna_product': 'transfer-messenger RNA',

@@ -41,8 +41,10 @@ def main():
     arg_group_io.add_argument('--prefix', '-p', action='store', default=None, help='Prefix for output files')
     arg_group_io.add_argument('--force', '-f', action='store_true', help='Force overwriting existing output folder')
     
+    arg_group_domain = parser.add_argument_group('Domain')
+    arg_group_domain.add_argument('--domain', action='store', default=bc.DOMAIN_BACTERIA, choices=[bc.DOMAIN_BACTERIA, bc.DOMAIN_ARCHAEA], help='Annotation domain: bacteria/archaea (default = bacteria)')
+
     arg_group_annotation = parser.add_argument_group('Annotation')
-    arg_group_annotation.add_argument('--organism', action='store', default=bc.ORGANISM_BACTERIA, choices=[bc.ORGANISM_BACTERIA, bc.ORGANISM_ARCHAEA], help='Organism domain profile: bacteria/archaea (default = bacteria)')
     arg_group_annotation.add_argument('--proteins', action='store', default=None, dest='proteins', help='Fasta file of trusted protein sequences')
     arg_group_annotation.add_argument('--hmms', action='store', default=None, dest='hmms', help='HMM file of trusted hidden markov models in HMMER format')
     
@@ -84,9 +86,9 @@ def main():
         sys.exit(f'ERROR: input proteins file ({args.input}) not valid!')
     log.info('input-path=%s', aa_path)
     
-    cfg.organism = args.organism
+    cfg.domain = args.domain
     cfg.check_db_path(args)
-    cfg.db_info = db.check(cfg.db_path, cfg.organism)
+    cfg.db_info = db.check(cfg.db_path, cfg.domain)
     cfg.check_tmp_path(args)
     cfg.check_user_proteins(args)
     cfg.check_threads(args)
@@ -253,7 +255,7 @@ def annotate_aa(aas: Sequence[dict]):
     print('\tconduct expert systems...')  # conduct expert systems annotation
     aa_path = cfg.tmp_path.joinpath('aa.faa')
     orf.write_internal_faa(aas, aa_path)
-    if(cfg.organism == bc.ORGANISM_BACTERIA):
+    if(cfg.domain == bc.DOMAIN_BACTERIA):
         log.debug('conduct expert system: amrfinder')
         cfg.translation_table = 11
         expert_amr_found = exp_amr.search(aas, aa_path)
@@ -261,7 +263,7 @@ def annotate_aa(aas: Sequence[dict]):
     else:
         print('\t\tskip bacterial AMRFinderPlus expert system for archaeal profile')
     log.debug('conduct expert system: aa seqs')
-    expert_db_name = 'expert-protein-sequences-archaea.dmnd' if cfg.organism == bc.ORGANISM_ARCHAEA else 'expert-protein-sequences.dmnd'
+    expert_db_name = 'expert-protein-sequences-archaea.dmnd' if cfg.domain == bc.DOMAIN_ARCHAEA else 'expert-protein-sequences.dmnd'
     diamond_db_path = cfg.db_path.joinpath(expert_db_name)
     expert_aa_found = exp_aa_seq.search(aas, aa_path, 'expert_proteins', diamond_db_path)
     print(f'\t\tprotein sequences: {len(expert_aa_found)}')

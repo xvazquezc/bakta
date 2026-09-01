@@ -17,7 +17,7 @@ HIT_COVERAGE_TRUNCATED = 0.8
 log = logging.getLogger('R_RNA')
 
 R_RNA_PROFILES = {
-    bc.ORGANISM_BACTERIA: {
+    bc.DOMAIN_BACTERIA: {
         'database': 'rRNA',
         'models': {
             'RF00001': ('5S', 'rrf', 119, 'K01985', so.SO_RRNA_5S.id),
@@ -25,7 +25,7 @@ R_RNA_PROFILES = {
             'RF02541': ('23S', 'rrl', 2925, 'K01980', so.SO_RRNA_23S.id)
         }
     },
-    bc.ORGANISM_ARCHAEA: {
+    bc.DOMAIN_ARCHAEA: {
         'database': 'rRNA-archaea',
         'models': {
             'RF00001': ('5S', 'rrf', 119, 'K01985', so.SO_RRNA_5S.id),
@@ -40,7 +40,7 @@ def predict_r_rnas(data: dict, sequences_path: Path):
     """Search for ribosomal RNA sequences."""
 
     output_path = cfg.tmp_path.joinpath('rrna.tsv')
-    profile = R_RNA_PROFILES[cfg.organism or bc.ORGANISM_BACTERIA]
+    profile = R_RNA_PROFILES[cfg.domain or bc.DOMAIN_BACTERIA]
     cmd = [
         'cmscan',
         '--noali',

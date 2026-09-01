@@ -43,7 +43,7 @@ species = None
 strain = None
 plasmid = None
 taxon = None
-organism = None
+domain = None
 
 # annotation configuration
 complete = None
@@ -78,9 +78,9 @@ skip_filter = None
 skip_plot = None
 
 
-def normalize_gram(organism: str, gram_value: str) -> str:
-    """Return the applicable Gram value for an organism profile."""
-    return bc.GRAM_UNKNOWN if organism == bc.ORGANISM_ARCHAEA else gram_value
+def normalize_gram(domain: str, gram_value: str) -> str:
+    """Return the applicable Gram value for a domain profile."""
+    return bc.GRAM_UNKNOWN if domain == bc.DOMAIN_ARCHAEA else gram_value
 
 run_start = datetime.now()
 run_end = None
@@ -127,10 +127,10 @@ def setup(args):
     force = args.force
     log.info('force=%s', force)
 
-    # organism configurations
-    global genus, species, strain, plasmid, taxon, organism
-    organism = args.organism
-    log.info('organism=%s', organism)
+    # domain configurations
+    global genus, species, strain, plasmid, taxon, domain
+    domain = args.domain
+    log.info('domain=%s', domain)
     genus = args.genus
     if(genus is not None):
         genus = genus.strip()
@@ -192,9 +192,9 @@ def setup(args):
     log.info('prodigal_tf=%s', prodigal_tf)
     translation_table = args.translation_table
     log.info('translation_table=%s', translation_table)
-    if(organism == bc.ORGANISM_ARCHAEA and args.gram != bc.GRAM_UNKNOWN):
+    if(domain == bc.DOMAIN_ARCHAEA and args.gram != bc.GRAM_UNKNOWN):
         log.info('ignore gram=%s for archaeal profile', args.gram)
-    gram = normalize_gram(organism, args.gram)
+    gram = normalize_gram(domain, args.gram)
     log.info('gram=%s', gram)
     compliant = args.compliant
     log.info('compliant=%s', compliant)

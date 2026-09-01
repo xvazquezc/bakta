@@ -71,7 +71,7 @@ def predict_tm_rnas(data: dict, sequences_path: Path):
                     tmrna['start'] = start
                     tmrna['stop'] = stop
                     tmrna['strand'] = strand
-                    profile = bc.ORGANISM_PROFILES[cfg.organism or bc.ORGANISM_BACTERIA]
+                    profile = bc.DOMAIN_PROFILES[cfg.domain or bc.DOMAIN_BACTERIA]
                     tmrna['gene'] = profile['tmrna_gene']
                     tmrna['product'] = profile['tmrna_product']
                     tmrna['db_xrefs'] = [so.SO_TMRNA.id]

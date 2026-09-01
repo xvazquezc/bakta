@@ -2,7 +2,7 @@
 
 ## Scope and compatibility
 
-Archaeal annotation is an explicit `--organism archaea` profile. `bacteria`
+Archaeal annotation is an explicit `--domain archaea` profile. `bacteria`
 remains the default and must retain its current results and database layout.
 One database build always creates both profiles; the profile is selected by the
 user at runtime and is not inferred from sequence content.
