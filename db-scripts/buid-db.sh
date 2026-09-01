@@ -1,10 +1,16 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 # Build one database containing both domain profiles. The runtime
 # --domain option selects its profile-specific assets and predictors.
 BAKTA_TAXON_ARGS="--taxon 2 --taxon 2157"
+
+# Database helper scripts reside beside this entry point. This used to rely on
+# an undocumented BAKTA_DB_SCRIPTS environment variable, making direct runs
+# fail with paths such as /init-db.py. Resolve it from the script location so
+# the build can be started from any working directory.
+BAKTA_DB_SCRIPTS="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
 mkdir db
 cd db
