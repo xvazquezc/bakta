@@ -44,7 +44,7 @@ def _run_ori_finder(input_path: Path, output_path: Path, topology: str, level: s
     proc = sp.run(cmd, cwd=str(cfg.tmp_path), env=cfg.env, stdout=sp.PIPE, stderr=sp.PIPE, universal_newlines=True)
     if(proc.returncode != 0):
         log.debug('stdout=%s, stderr=%s', proc.stdout, proc.stderr)
-        raise Exception(f'Ori-Finder-Arch error! error code: {proc.returncode}')
+        raise Exception(f'Ori-Finder-Arch error! exit_code={proc.returncode}; stderr={proc.stderr.strip()}')
 
 
 def _parse_orics(output_path: Path, sequences: dict) -> Sequence[dict]:
