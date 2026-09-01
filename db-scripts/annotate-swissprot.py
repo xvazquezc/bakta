@@ -18,6 +18,7 @@ parser.add_argument('--xml', action='store', help='Path to SwissProt xml file.')
 parser.add_argument('--db', action='store', help='Path to Bakta sqlite3 db file.')
 parser.add_argument('--taxon', action='append', default=None, help='NCBI root taxon to include; repeat for multiple domains (default: 2, Bacteria).')
 args = parser.parse_args()
+taxa = args.taxon or ['2']
 
 
 taxonomy_path = Path(args.taxonomy).resolve()

@@ -22,6 +22,7 @@ parser.add_argument('--db', action='store', help='Path to Bakta sqlite3 db file.
 parser.add_argument('--ips', action='store', help='Path to IPS fasta file.')
 parser.add_argument('--taxon', action='append', default=None, help='NCBI root taxon to include; repeat for multiple domains (default: 2, Bacteria).')
 args = parser.parse_args()
+taxa = args.taxon or ['2']
 
 DISCARDED_PRODUCTS = [
     'hypothetical protein',

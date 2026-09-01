@@ -22,6 +22,7 @@ parser.add_argument('--pscc', action='store', help='Path to PSCC fasta file.')
 parser.add_argument('--pscc_sorf', action='store', help='Path to sORF PSCC fasta file.')
 parser.add_argument('--taxon', action='append', default=None, help='NCBI root taxon to include; repeat for multiple domains (default: 2, Bacteria).')
 args = parser.parse_args()
+taxa = args.taxon or ['2']
 
 PSCC_MIN_MEMBER_COUNT = 10
 MAX_SORF_LENGTH = 30

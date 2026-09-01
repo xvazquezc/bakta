@@ -22,6 +22,7 @@ parser.add_argument('--psc', action='store', help='Path to PSC fasta file.')
 parser.add_argument('--psc_sorf', action='store', help='Path to sORF PSC fasta file.')
 parser.add_argument('--taxon', action='append', default=None, help='NCBI root taxon to include; repeat for multiple domains (default: 2, Bacteria).')
 args = parser.parse_args()
+taxa = args.taxon or ['2']
 
 MAX_SORF_LENGTH = 30
 
